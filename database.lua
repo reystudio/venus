@@ -58,7 +58,9 @@ function BindDatabase()
                 plyid ]] .. columns.plyid .. [[ PRIMARY KEY,
                 rank ]] .. columns.rank .. [[,
                 lastVisit ]] .. columns.lastVisit .. [[,
-                perms ]] .. columns.perms .. [[);
+                perms ]] .. columns.perms .. [[,
+                firstVisit ]] .. columns.lastVisit .. [[,
+                totalPlayed ]] .. columns.lastVisit .. [[);
             ]]
         },
         {
