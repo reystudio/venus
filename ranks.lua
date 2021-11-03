@@ -3,6 +3,7 @@
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 
 module('Venus', package.seeall)
+local s = MySQLite.SQLStr
 
 --[[
     local user = Ranks('user', 'Member', Color(255, 255, 255), {'who', 'help', 'votekick'})
@@ -123,7 +124,6 @@ local function pushDefaultRanks()
     for _, rank in next, defaultRanks do isLoaded[rank.rank] = false end
     local function checkForRanks() for k, v in next, isLoaded do if not v then return false end end return true end
     local rankQuery = 'INSERT INTO venus_ranks VALUES (%s, %s, %s, %s, %s);'
-    local s = MySQLite.SQLStr
     for _, rank in next, defaultRanks do
         MySQLite.query(rankQuery:format(s(rank.rank), s(rank.color), s(rank.name), s(rank.perms), rank.derivedFrom and s(rank.derivedFrom) or 'NULL'),
         function()
