@@ -102,7 +102,7 @@ function PrintStatus(level, result, process, msg)
     local preset = resultPresets[result] or resultPresets[1]
     preset = table.Copy(preset)
     if process then
-        table.insert(preset, 5, space .. process)
+        table.insert(preset, 5, space .. tostring(process))
         table.insert(preset, 5, orange)
     end
     preset[#preset + 1] = msg
