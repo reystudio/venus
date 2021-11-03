@@ -1,7 +1,8 @@
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- DATABASE WORKAROUND (Automatically switches between MySQL & SQLite)
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-local AUTO_INCREMENT = 'AUTO_INCREMENT'
+local AUTO_INCREMENT = 'AUTO_INCREMENT' -- this shit works different in SQLite & MySQL, im gonna learn it later
+local s = MySQLite.SQLStr
 
 module('Venus', package.seeall)
 
