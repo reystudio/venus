@@ -127,14 +127,71 @@ function BindDatabase()
     end
 end
 
-function GetPlayerData(steamid, ...)
 
+function PushNewPlayerData(steamid)
+    PrintStatus(8, nil, 'New player', 'Creating a new player in the database...')
 
+    local visit = MySQLite.isMySQL() and 'UNIX_TIMESTAMP()' or 'strftime(\'%s\',\'now\')'
+    MySQLite.query( ('INSERT INTO venus_players VALUES (%i,%s,%s,%s,%s,%i);'):
+    format( steamid, s('user'), visit, s(util.TableToJSON({})), visit, 0 ),
+    function(body)
+        PrintStatus(5, true, 'PData', ('%s\'s data was pushed into the database.'):format(tostring(steamid)) )
+    end,
+    function(err, q)
+        PrintStatus(0, false, 'PData', ('Pushing %s\'s data into the database failed.'):format(tostring(steamid)) )
+        DebugPrint(0, 'SQL error:', err, q)
+    end)
 
 end
 
-function GetPlayersByRank(rank)
-    -- ?
+function GetPlayerData(steamid, callback)
+    PrintStatus(8, nil, 'PData', ('Pulling %s\'s data from the database...'):format(tostring(steamid)) )
+    if not steamid then
+        PrintStatus(0, false, 'PData', ('Pulling %s\'s data from the database failed.'):format(tostring(steamid)) )
+        DebugPrint(0, 'Invalid SteamID3:', steamid)
+        callback()
+        return
+    end
+
+    MySQLite.query( ([[SELECT rank, firstVisit, lastVisit, perms, totalPlayed FROM venus_players WHERE plyid = %s]]):format(s(steamid)),
+    function(body)
+        if not (body and next(body)) then
+            PrintStatus(0, false, 'PData', ('Can\'t find %s\'s data in the database.'):format(tostring(steamid)) )
+            callback(-1)
+            return
+        end
+        callback(body[1])
+    end,
+    function(err, q)
+        PrintStatus(0, false, 'PData', ('Pulling %s\'s data from the database failed.'):format(tostring(steamid)) )
+        DebugPrint(0, 'SQL error:', err, q)
+        callback()
+    end)
+end
+
+function GetPlayersByRank(rank, callback, startIndex, amount)
+    PrintStatus(8, nil, 'PData', ('Pulling users with %s rank from the database...'):format(rank) )
+    if not rank then
+        PrintStatus(0, false, 'PData', ('Pulling users with %s rank from the database failed.'):format(rank) )
+        DebugPrint(0, 'Invalid rank:', rank)
+        callback()
+        return
+    end
+
+    MySQLite.query( ([[SELECT * FROM venus_players WHERE rank = %s%s;]]):format(s(rank), (startIndex and amount) and (' LIMIT %i,%i'):format(startIndex, amount) or ''),
+    function(body)
+        if not (body and next(body)) then
+            PrintStatus(0, false, 'PData', ('Can\'t find users with %s rank in the database.'):format(tostring(steamid)) )
+            callback()
+            return
+        end
+        callback(body[1])
+    end,
+    function(err, q)
+        PrintStatus(0, false, 'PData', ('Pulling users with %s rank from the database failed.'):format(tostring(steamid)) )
+        DebugPrint(0, 'SQL error:', err, q)
+        callback()
+    end)
 end
 
 EventCallback('DatabaseLoaded', 'ShowInitStatus', function(tables)
