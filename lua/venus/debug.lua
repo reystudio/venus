@@ -86,9 +86,13 @@ function DebugPrint(level, ...)
     local step = 1
     while not trace do
         local _trace = debug.getinfo(step)
-        if _trace then trace = _trace step = step + 1
-        else trace = _trace _trace = nil end
-    end
+        if _trace then
+            -- trace = _trace
+            step = step + 1
+        else
+            trace = debug.getinfo(step-2)
+            _trace = nil
+        end
     MsgC( orange, trace.short_src, red, arrow )
     Print(level, ...)
 end
