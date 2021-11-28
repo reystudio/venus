@@ -5,23 +5,23 @@
 module('Venus', package.seeall)
 
 -- colors that i use in console messages
-local orange = Color(255, 170, 50)
-local grey = Color(160, 160, 160)
-local white = color_white
-local red = Color(180, 0, 0)
-local green = Color(40, 180, 40)
-local cyan = Color(40, 200, 200)
-local lightgrey = Color(230, 230, 230)
+orange = Color(255, 170, 50)
+grey = Color(160, 160, 160)
+white = color_white
+red = Color(180, 0, 0)
+green = Color(40, 180, 40)
+cyan = Color(40, 200, 200)
+lightgrey = Color(230, 230, 230)
 
 -- prevent the creation a lot of new strings that causes using cpu time
-local leftFBracket, rightFBracket = '{', '}'
-local leftQBracket, rightQBracket = '[', ']'
-local leftCBracket, rightCBracket = '(', ')'
-local arrow = ' ➤ '
-local comma = ', '
-local dbglvl = 'venus_debuglevel'
-local check, cross = 'Successful ✓', 'Failed ❌'
-local space = ' '
+leftFBracket, rightFBracket = '{', '}'
+leftQBracket, rightQBracket = '[', ']'
+leftCBracket, rightCBracket = '(', ')'
+arrow = ' ➤ '
+comma = ', '
+dbglvl = 'venus_debuglevel'
+check, cross = 'Successful ✓', 'Failed ❌'
+space = ' '
 
 -- convar to prevent printing some shit in console
 local cvar = GetConVar( dbglvl )
