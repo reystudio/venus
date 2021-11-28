@@ -33,11 +33,9 @@ Ranks = {
         }
     end,
     Update = function(self, rank, name, color, perms, parent)
-        if self.List[rank] then
-            return false, 'Already exists'
-        end
         local oldname = self.rank
         if self.rank ~= rank then
+            if self.List[rank] then return false, 'Already exists' end
             self.List[rank] = self
             self.List[self.rank] = nil
             self.rank = rank
