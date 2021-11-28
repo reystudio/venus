@@ -26,7 +26,7 @@ local hrm = hook.Remove
 
 module('Venus', package.seeall)
 
-function SyncPlayer(ply, rank, firstVisit, lastVisit, rawPerms, totalSpent)
+function SyncPlayer(ply, rank, firstVisit, lastVisit, rawPerms, totalPlayed)
     ply:SetNWString('usergroup', rank)
 
     -- converting the {'e2', 'e2p', 'noclip'} form into {[permission] = true} form
@@ -37,7 +37,7 @@ function SyncPlayer(ply, rank, firstVisit, lastVisit, rawPerms, totalSpent)
         rank = rank,
         firstVisit = firstVisit,
         lastVisit = lastVisit,
-        totalSpent = totalSpent,
+        totalPlayed = totalPlayed,
         perms = perms
     }
 end
@@ -60,7 +60,7 @@ local function LoadPlayer(ply)
         end
         PrintStatus(8, true, ply, 'Synced with the database.')
         DebugPrint(8, data)
-        SyncPlayer(ply, data.rank, data.firstVisit, data.lastVisit, data.perms, data.totalSpent)
+        SyncPlayer(ply, data.rank, data.firstVisit, data.lastVisit, data.perms, data.totalPlayed)
     end)
 end
 
