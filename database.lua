@@ -201,9 +201,3 @@ EventCallback('DatabaseLoaded', 'ShowInitStatus', function(tables)
     Print(5, 'Database initialization result:')
     for k, v in pairs(tables) do PrintStatus(5, v == 1, ' ' .. k, v~=1 and unpack(v) or nil) end
 end)
-
-function GetPlayerFromDatabase(steamid)
-
-
-
-end
