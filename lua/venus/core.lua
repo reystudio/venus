@@ -22,7 +22,7 @@ local setmetatable = setmetatable
 
 module('Venus', package.seeall)
 
---[[
+
     include 'debug.lua'
     include 'color.lua'
     include 'events.lua'
@@ -32,7 +32,7 @@ module('Venus', package.seeall)
 
     include 'player.lua'
     include 'ranks.lua'
-]]
+
 
 function Initialize()
     RunEvent('PreLoaded')
@@ -43,6 +43,8 @@ end
 if true then 
 
     -- GetConVar('venus_debuglevel'):SetInt(2)
+
+    -- Do initialization after database is initialized
     Initialize()
 
     -- Print()

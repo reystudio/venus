@@ -268,7 +268,7 @@ EventCallback('RemovedRank', 'UpdateUsers', function(rank)
 end)
 
 -- set 'user' rank to all players online
-EventCallback('UpdatedRank', 'UpdatePlayers', function(rank)
+EventCallback('RemovedRank', 'UpdateActivePlayers', function(rank)
     for k, ply in next, player.GetAll() do
         if ply:GetNWString('usergroup') == rank then
             ply:SetNWString('usergroup', 'user')
