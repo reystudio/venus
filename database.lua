@@ -147,6 +147,34 @@ function PushNewPlayerData(steamid)
 
 end
 
+function PushPlayerData(steamid, changes)
+
+    PrintStatus(8, nil, 'Update player', 'Updating the player data...')
+
+    local _t = changes
+    local _q = [[UPDATE venus_players SET %s WHERE %s;]]
+    local _f = string.rep( ("%s = '%s'"), table.Count(_t), ', ')
+    local _u = {}
+
+    for k, v in next, _t do
+        print(k, v)
+        _u[#_u + 1] = k
+        _u[#_u + 1] = v
+    end
+
+    _f = _f:format(unpack(_u))
+    _q = _q:format(_f, 'plyid = ' .. steamid)
+
+    MySQLite.query(_q, function(body)
+        PrintStatus(5, true, 'Update player', ('Successfully updated #%s'):format(steamid))
+    end,
+    function(err, q)
+        PrintStatus(5, false, 'Update player', ('Something went wrong while updating #%s'):format(steamid))
+        DebugPrint(0, 'SQL error:', err, q)
+    end)
+
+end
+
 function GetPlayerData(steamid, callback)
     PrintStatus(8, nil, 'PData', ('Pulling %s\'s data from the database...'):format(tostring(steamid)) )
     if not steamid then
