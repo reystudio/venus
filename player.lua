@@ -67,6 +67,15 @@ end
 -- async loading player data from the database
 hadd('PlayerInitialSpawn', 'Venus_LoadPlayer', LoadPlayer)
 
+local function UnloadPlayer(ply)
+    PrintStatus(0, nil, 'Pushing player data into the database...')
+    local dataOnLeave = table.Copy(ply:GetVenusData())
+    dataOnLeave.perms = util.TableToJSON(dataOnLeave.perms)
+    Venus.PushPlayerData(ply:SteamID3(), dataOnLeave)
+end
+
+hadd('PlayerDisconnected', 'Venus_UnloadPlayer', UnloadPlayer)
+
 --[[
 
     TODO: update lastVisit & totalPlayer on disconnect
