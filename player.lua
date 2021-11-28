@@ -6,8 +6,18 @@ local PlayerClass = FindMetaTable 'Player'
 
 -- getting steamid3
 function PlayerClass:SteamID3()
-    local y, z = string.match(self:SteamID(), 'STEAM_%d:(%d):(%d+)')
-    return tonumber(y) + tonumber(z) * 2
+    if not self.steamid3 then
+        local y, z = string.match(self:SteamID(), 'STEAM_%d:(%d):(%d+)')
+        self.steamid3 = tonumber(y) + tonumber(z) * 2
+    end
+    return self.steamid3
+end
+
+function PlayerClass:GetVenusData()
+    self.VenusData.lastVisit = os.time()
+    self.VenusData.totalPlayed = self.VenusData.totalPlayed + (self.lastTotalUpdate and (CurTime() - self.lastTotalUpdate) or 0)
+    self.lastTotalUpdate = CurTime()
+    return self.VenusData
 end
 
 -- more simple using hooks
