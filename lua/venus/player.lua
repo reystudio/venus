@@ -43,7 +43,7 @@ function SyncPlayer(ply, rank, firstVisit, lastVisit, rawPerms, totalPlayed)
 end
 
 local function LoadPlayer(ply)
-    -- ply.VenusLoading = true
+    ply.VenusLoaded = false
     PrintStatus(0, nil, 'Pulling player data from the database...')
     GetPlayerData(ply:SteamID3(), function(data)
         if not data then
@@ -61,6 +61,7 @@ local function LoadPlayer(ply)
         PrintStatus(8, true, ply, 'Synced with the database.')
         DebugPrint(8, data)
         SyncPlayer(ply, data.rank, data.firstVisit, data.lastVisit, data.perms, data.totalPlayed)
+        ply.VenusLoaded = true
     end)
 end
 
