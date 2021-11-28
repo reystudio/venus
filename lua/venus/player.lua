@@ -75,9 +75,3 @@ local function UnloadPlayer(ply)
 end
 
 hadd('PlayerDisconnected', 'Venus_UnloadPlayer', UnloadPlayer)
-
---[[
-
-    TODO: update lastVisit & totalPlayer on disconnect
-
-]]
