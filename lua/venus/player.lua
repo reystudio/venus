@@ -70,8 +70,15 @@ hadd('PlayerInitialSpawn', 'Venus_LoadPlayer', LoadPlayer)
 
 local function UnloadPlayer(ply)
     PrintStatus(0, nil, 'Pushing player data into the database...')
-    local dataOnLeave = table.Copy(ply:GetVenusData())
-    dataOnLeave.perms = util.TableToJSON(dataOnLeave.perms)
+
+    local dataOnLeave = nil
+    if ply.VenusLoaded then
+        dataOnLeave = table.Copy(ply:GetVenusData())
+        dataOnLeave.perms = PermissionsIntoSQL(dataOnLeave.perms)
+    else -- if for some reason loading player data failed, just update his lastVisit timestamp
+        dataOnLeave = { lastVisit = os.time() }
+    end
+
     Venus.PushPlayerData(ply:SteamID3(), dataOnLeave)
 end
 

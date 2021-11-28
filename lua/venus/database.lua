@@ -130,6 +130,17 @@ function BindDatabase()
     end
 end
 
+function PermissionsIntoSQL(tbl)
+    return util.TableToJSON(table.GetKeys(tbl))
+end
+
+function PermissionsIntoLua(json)
+    local _t = {}
+    for _, perm in next, util.JSONToTable(json) do
+        _t[perm] = true
+    end
+    return _t
+end
 
 function PushNewPlayerData(steamid)
     PrintStatus(8, nil, 'New player', 'Creating a new player in the database...')

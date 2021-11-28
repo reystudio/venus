@@ -28,7 +28,7 @@ Ranks = {
             rank = self.rank,
             name = self.name,
             hexcolor = ToHex(self.color),
-            permissions = util.TableToJSON(table.GetKeys(self.permissions)),
+            permissions = PermissionsIntoSQL(self.permissions),
             derivedFrom = self.parent
         }
     end,
@@ -63,12 +63,9 @@ setmetatable(Ranks, {
             rank = rank,
             name = name,
             color = color,
-            permissions = {},
+            permissions = permissions,
             parent = parentName
         }
-        for k, v in next, permissions do
-            new.permissions[v] = true
-        end
         setmetatable(new, { __index = Ranks, __tostring = function(self) return ('VenusRank[%s]'):format(self.name) end })
         self.List[rank] = new
         return new
@@ -83,7 +80,7 @@ local function fromSQLtoVenus(body)
     for k, v in next, body do
         -- Print(v.rank, v.parent)
         if body[k].parent == 'NULL' then body[k].parent = nil end
-        local r = Ranks(v.rank, v.name, ToRGB(v.color), util.JSONToTable(v.perms), v.parent)
+        local r = Ranks(v.rank, v.name, ToRGB(v.color), PermissionsIntoLua(v.perms), v.parent)
         PrintStatus(5, nil, r.name)
     end
     -- Print(Ranks.List.user)
