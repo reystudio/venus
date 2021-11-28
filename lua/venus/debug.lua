@@ -93,7 +93,8 @@ function DebugPrint(level, ...)
             trace = debug.getinfo(step-2)
             _trace = nil
         end
-    MsgC( orange, trace.short_src, red, arrow )
+    end
+    MsgC( orange, trace.short_src, grey, ('(%i line)'):format(trace.linedefined), red, arrow )
     Print(level, ...)
 end
 
