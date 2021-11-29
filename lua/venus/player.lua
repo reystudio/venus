@@ -44,6 +44,7 @@ end
 
 local function LoadPlayer(ply)
     ply.VenusLoaded = false
+    ply.lastTotalUpdate = CurTime()
     PrintStatus(0, nil, 'Pulling player data from the database...')
     GetPlayerData(ply:SteamID3(), function(data)
         if not data then
@@ -75,6 +76,7 @@ local function UnloadPlayer(ply)
     if ply.VenusLoaded then
         dataOnLeave = table.Copy(ply:GetVenusData())
         dataOnLeave.perms = PermissionsIntoSQL(dataOnLeave.perms)
+        dataOnLeave.totalPlayed = math.floor(dataOnLeave.totalPlayed)
     else -- if for some reason loading player data failed, just update his lastVisit timestamp
         dataOnLeave = { lastVisit = os.time() }
     end
