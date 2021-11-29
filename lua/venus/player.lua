@@ -86,3 +86,12 @@ local function UnloadPlayer(ply)
 end
 
 hadd('PlayerDisconnected', 'Venus_UnloadPlayer', UnloadPlayer)
+
+local function UnloadAllPlayers()
+    for k, v in next, player.GetHumans() do
+        UnloadPlayer(v)
+    end
+end
+
+-- save all players on shutdown
+hadd('Shutdown', 'Venus_SaveOnShutdown', UnloadAllPlayers)
