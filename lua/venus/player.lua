@@ -13,6 +13,14 @@ function PlayerClass:SteamID3()
     return self.steamid3
 end
 
+local pattern = 'STEAM_0:%i:%i'
+function SteamID3to32(steamid)
+    steamid = tonumber(steamid)
+    local div = math.floor(steamid / 2)
+    local mod = steamid - div * 2
+    return pattern:format(mod, div)
+end
+
 function PlayerClass:GetVenusData()
     self.VenusData.lastVisit = os.time()
     self.VenusData.totalPlayed = self.VenusData.totalPlayed + (self.lastTotalUpdate and (CurTime() - self.lastTotalUpdate) or 0)
