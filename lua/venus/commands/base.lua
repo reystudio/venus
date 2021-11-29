@@ -2,9 +2,10 @@ module('Venus', package.seeall)
 
 Commands = {
     List = {},
-    Create = function(self, name, desc, safe, run)
+    Create = function(self, name, category, desc, safe, run)
         local Command = {
             name = name,
+            category = category,
             desc = desc or 'No description',
             safe = safe,
             run = run
@@ -26,7 +27,7 @@ setmetatable(Commands, {
 
 --
 
-Commands:Create('notfound', 'does nothing', true, function(self, caller, args, silent)
+Commands:Create('notfound', 'General', 'does nothing', true, function(self, caller, args, silent)
     Venus.PrintStatus(0, true, self.name, ('"%s" has runned the non-existing command.'):format(caller:Name()) )
     Venus.Print(8, caller, args, silent)
 end)
