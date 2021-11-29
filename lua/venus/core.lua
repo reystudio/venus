@@ -32,7 +32,8 @@ module('Venus', package.seeall)
 
     include 'player.lua'
     include 'ranks.lua'
-
+    
+    include 'commands/base.lua'
 
 function Initialize()
     RunEvent('PreLoaded')
