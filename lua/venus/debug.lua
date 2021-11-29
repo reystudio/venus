@@ -65,8 +65,9 @@ end
 function Print(level, ...)
     local args = {...}
     for _, content in next, args do
+        MsgC(grey, leftQBracket .. '#', orange, _, grey, rightQBracket, space)
         if type(content) == 'table' then 
-            MsgC(grey, tostring(content), orange, args[_+1] and space or space)
+            MsgC(grey, tostring(content), orange, space)
             printTable(content)
             if args[_+1] then
                 MsgC(orange, ',\n')
