@@ -142,6 +142,27 @@ function PermissionsIntoLua(json)
     return _t
 end
 
+local function findAndUpdateSteamID3(steamid, changes)
+    local ply = FindActiveBySteamID3(steamid)
+    if ply then
+        PrintStatus(8, true, 'Update Player Online', 'Set up new data to the player..')
+        if changes.perms and type(changes.perms) == 'string' then
+            changes.perms = PermissionsIntoLua(changes.perms)
+        end
+        if changes.rank and type(changes.rank) == 'string' then
+            local rankObj = Ranks.List[changes.rank]
+            if rankObj then
+                changes.rank = rankObj
+            else
+                PrintStatus(0, false, 'Ranks Error', ('Trying to set to #%i an invalid rank %s'):format(steamid, changes.rank))
+            end
+        end
+        table.Merge(ply.VenusData, changes)
+    else
+        PrintStatus(8, false, 'Update Player Online', ('Player #%i isn\'t online.'):format(steamid))
+    end
+end
+
 function PushNewPlayerData(steamid)
     PrintStatus(8, nil, 'New player', 'Creating a new player in the database...')
 
@@ -150,6 +171,13 @@ function PushNewPlayerData(steamid)
     format( steamid, s('user'), visit, s(util.TableToJSON({})), visit, 0 ),
     function(body)
         PrintStatus(5, true, 'PData', ('%s\'s data was pushed into the database.'):format(tostring(steamid)) )
+        findAndUpdateSteamID3(steamid, {
+            rank = 'user',
+            firstVisit = os.time(),
+            lastVisit = os.time(),
+            totalPlayed = 0,
+            perms = '[]'
+        })
     end,
     function(err, q)
         PrintStatus(0, false, 'PData', ('Pushing %s\'s data into the database failed.'):format(tostring(steamid)) )
@@ -178,6 +206,7 @@ function PushPlayerData(steamid, changes)
 
     MySQLite.query(_q, function(body)
         PrintStatus(5, true, 'Update player', ('Successfully updated #%s'):format(steamid))
+        findAndUpdateSteamID3(steamid, changes)
     end,
     function(err, q)
         PrintStatus(5, false, 'Update player', ('Something went wrong while updating #%s'):format(steamid))
