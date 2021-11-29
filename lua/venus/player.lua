@@ -82,7 +82,7 @@ local function LoadPlayer(ply)
         end
         PrintStatus(8, true, ply, 'Synced with the database.')
         DebugPrint(8, data)
-        PushPlayerData(ply:SteamID3(), { data.lastVisit = os.time() }, true)
+        PushPlayerData(ply:SteamID3(), { lastVisit = os.time() }, true)
         SyncPlayer(ply, data.rank, data.firstVisit, data.lastVisit, data.perms, data.totalPlayed)
         ply.VenusLoaded = true
     end)
