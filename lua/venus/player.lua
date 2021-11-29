@@ -57,6 +57,7 @@ local function LoadPlayer(ply)
             DebugPrint(8, ply, ply:SteamID3())
             SyncPlayer(ply, 'user', os.time(), os.time(), util.TableToJSON({}), 0)
             PushNewPlayerData(ply:SteamID3())
+            ply.VenusLoaded = true
             return
         end
         PrintStatus(8, true, ply, 'Synced with the database.')
