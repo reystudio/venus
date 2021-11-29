@@ -21,6 +21,18 @@ function SteamID3to32(steamid)
     return pattern:format(mod, div)
 end
 
+function FindActiveBySteamID3(steamid)
+    local steamid32 = SteamID3to32(steamid)
+    local target = nil
+    for k, v in next, player.GetHumans() do
+        if v:SteamID3() == steamid then
+            target = v
+            break
+        end
+    end
+    return target
+end
+
 function PlayerClass:GetVenusData()
     self.VenusData.lastVisit = os.time()
     self.VenusData.totalPlayed = self.VenusData.totalPlayed + (self.lastTotalUpdate and (CurTime() - self.lastTotalUpdate) or 0)
