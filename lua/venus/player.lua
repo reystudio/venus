@@ -102,7 +102,7 @@ local function UnloadPlayer(ply)
         dataOnLeave = { lastVisit = os.time() }
     end
 
-    Venus.PushPlayerData(ply:SteamID3(), dataOnLeave)
+    Venus.PushPlayerData(ply:SteamID3(), dataOnLeave, true)
 end
 
 hadd('PlayerDisconnected', 'Venus_UnloadPlayer', UnloadPlayer)

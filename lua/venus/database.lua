@@ -186,7 +186,7 @@ function PushNewPlayerData(steamid)
 
 end
 
-function PushPlayerData(steamid, changes)
+function PushPlayerData(steamid, changes, skipUpdating)
 
     PrintStatus(8, nil, 'Update player', 'Updating the player data...')
 
@@ -206,7 +206,7 @@ function PushPlayerData(steamid, changes)
 
     MySQLite.query(_q, function(body)
         PrintStatus(5, true, 'Update player', ('Successfully updated #%s'):format(steamid))
-        findAndUpdateSteamID3(steamid, changes)
+        if not skipUpdating then findAndUpdateSteamID3(steamid, changes) end
     end,
     function(err, q)
         PrintStatus(5, false, 'Update player', ('Something went wrong while updating #%s'):format(steamid))
