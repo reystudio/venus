@@ -149,6 +149,7 @@ local function findAndUpdateSteamID3(steamid, changes)
         if changes.perms and type(changes.perms) == 'string' then
             changes.perms = PermissionsIntoLua(changes.perms)
         end
+        --[[
         if changes.rank and type(changes.rank) == 'string' then
             local rankObj = Ranks.List[changes.rank]
             if rankObj then
@@ -157,6 +158,7 @@ local function findAndUpdateSteamID3(steamid, changes)
                 PrintStatus(0, false, 'Ranks Error', ('Trying to set to #%i an invalid rank %s'):format(steamid, changes.rank))
             end
         end
+        ]]
         table.Merge(ply.VenusData, changes)
     else
         PrintStatus(8, false, 'Update Player Online', ('Player #%i isn\'t online.'):format(steamid))
