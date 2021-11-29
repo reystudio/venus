@@ -117,3 +117,23 @@ end
 
 -- save all players on shutdown
 hadd('Shutdown', 'Venus_SaveOnShutdown', UnloadAllPlayers)
+
+local lastAutoSave = CurTime()
+local saveTimer = 15 * 60 -- every 15 minutes
+
+local function AutoSavePData()
+    if lastAutoSave + saveTimer > CurTime() then return end
+    lastAutoSave = CurTime()
+    PrintStatus(0, nil, 'Autosaving', 'Saving players\' data.')
+    for k, v in next, player.GetHumans() do
+        local data = v:GetVenusData()
+        PushPlayerData(v:SteamID3(), {
+            lastVisit = data.lastVisit,
+            totalPlayed = math.floor(data.totalPlayed)
+        }, true)
+    end
+end
+
+-- autosave every 15 minutes
+-- probably later i could bind autoupdating to some event
+hadd('Tick', 'Venus_AutoSave', AutoSavePData)
