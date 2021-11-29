@@ -14,8 +14,10 @@ local s = MySQLite.SQLStr
     print( moder:HasAccess( 'who' ) ) -- true
 ]]
 
+local l = Ranks and Ranks.List or {}
+
 Ranks = {
-    List = {},
+    List = l,
     HasAccess = function(self, flag)
         local perms = self.permissions
         if perms['*'] then return true end
