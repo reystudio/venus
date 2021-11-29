@@ -109,6 +109,7 @@ end
 hadd('PlayerDisconnected', 'Venus_UnloadPlayer', UnloadPlayer)
 
 local function UnloadAllPlayers()
+    PrintStatus(0, nil, 'SHUTDOWN', 'SAVING ALL PLAYERS\' DATA.')
     for k, v in next, player.GetHumans() do
         UnloadPlayer(v)
     end
