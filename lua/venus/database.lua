@@ -164,13 +164,13 @@ function PushPlayerData(steamid, changes)
 
     local _t = changes
     local _q = [[UPDATE venus_players SET %s WHERE %s;]]
-    local _f = string.rep( ("%s = '%s'"), table.Count(_t), ', ')
+    local _f = string.rep( ("%s = %s"), table.Count(_t), ', ')
     local _u = {}
 
     for k, v in next, _t do
         print(k, v)
         _u[#_u + 1] = k
-        _u[#_u + 1] = v
+        _u[#_u + 1] = s(v)
     end
 
     _f = _f:format(unpack(_u))
