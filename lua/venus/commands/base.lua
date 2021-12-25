@@ -95,6 +95,16 @@ setmetatable(Commands, {
     end
 })
 
---
+Commands:Create('notfound', 'General', 'does nothing', true, function(self, caller, silent, args)
+
+end)
+
+Commands:Create('who', 'General', 'Shows players on the server and their ranks.', true, function(self, caller, silent, args)
+
+end)
+
+Commands:Create('kick', 'Administrative', 'Kicks the player off the server', false, function(self, caller, silent, args)
+
+end)
 
 Print(5, 'Loading commands module complete.')
