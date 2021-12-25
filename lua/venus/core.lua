@@ -22,23 +22,22 @@ local setmetatable = setmetatable
 
 module('Venus', package.seeall)
 
+include 'debug.lua'
+include 'color.lua'
+include 'events.lua'
 
-    include 'debug.lua'
-    include 'color.lua'
-    include 'events.lua'
+include 'mysqlite.lua'
+include 'database.lua'
 
-    include 'mysqlite.lua'
-    include 'database.lua'
+include 'player.lua'
+include 'ranks.lua'
 
-    include 'player.lua'
-    include 'ranks.lua'
-    
-    include 'commands/base.lua'
+include 'commands/base.lua'
 
 function Initialize()
-    RunEvent('PreLoaded')
-    BindDatabase()
-    RunEvent('Loaded')
+	RunEvent('PreLoaded')
+	BindDatabase()
+	RunEvent('Loaded')
 end
 
 if true then 
@@ -46,9 +45,7 @@ if true then
     -- GetConVar('venus_debuglevel'):SetInt(2)
 
     -- Do initialization after database is initialized
-    Initialize()
-
-    -- Print()
+		Initialize()
 
     -- Print('Ololol', Entity(1), {
     --     InsideSubTable = {
