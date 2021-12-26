@@ -114,7 +114,7 @@ setmetatable(Commands, {
 })
 
 Commands:Create('notfound', 'General', 'does nothing', true, function(self, caller, silent, args)
-
+	Venus.CmdFeedback(caller, "Can't find the command you are trying to call.")
 end)
 
 Commands:Create('who', 'General', 'Shows players on the server and their ranks.', true, function(self, caller, silent, args)
