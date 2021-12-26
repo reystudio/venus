@@ -34,6 +34,8 @@ include 'ranks.lua'
 
 include 'commands/base.lua'
 
+include 'messages.lua'
+
 function Initialize()
 	RunEvent('PreLoaded')
 	BindDatabase()

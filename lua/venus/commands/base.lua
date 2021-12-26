@@ -32,20 +32,22 @@ local ArgSepPattern = '[%s]'
 
 Commands = {
 	List = {},
-	Create = function(self, name, category, desc, safe, run)
+	Create = function(self, name, category, desc, safe, run, content)
 		local Command = {
 			name = name,
 			category = category,
 			desc = desc or 'No description',
 			safe = safe,
-			run = run
+			run = run,
+			content = content
 		}
 		setmetatable(Command, {
 			__call = function(...)
 				msgOnCall(...)
 				run(...)
 			end,
-			__tostring = function(self) return ('[cmd:%s]'):format(self.name) end
+			__index = self,
+			__tostring = function(self) return ('cmd:%s'):format(self.name) end
 		})
 		self.List[name] = Command
 		return Command
@@ -120,7 +122,16 @@ Commands:Create('who', 'General', 'Shows players on the server and their ranks.'
 end)
 
 Commands:Create('kick', 'Administrative', 'Kicks the player off the server', false, function(self, caller, silent, args)
-
-end)
+	local target = args[1]
+	if not self:canSpell(silent, caller, target) then
+		self:notifyNoPermissions(caller)
+		return
+	end
+	local reason = self.content.kickMessage:format( args[2] )
+	-- TODO: push the action log into admin log system and in-game monitoring
+	target:Kick(reason)
+end, {
+	kickMessage = 'You were kicked from the server.\nReason: %s'
+})
 
 Print(5, 'Loading commands module complete.')
