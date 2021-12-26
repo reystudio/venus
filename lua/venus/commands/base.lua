@@ -118,7 +118,24 @@ Commands:Create('notfound', 'General', 'does nothing', true, function(self, call
 end)
 
 Commands:Create('who', 'General', 'Shows players on the server and their ranks.', true, function(self, caller, silent, args)
-
+	local users = {}
+	local plyLine = '#%i.\t%s\t%s\t%s'
+	for k, v in ipairs(player.GetAll()) do
+		local rank = v.VenusData and v.VenusData.rank or 'user'
+		local tbl = {
+			'\n',
+			Color(255, 170, 50),
+			k .. '. ',
+			Color(230, 230, 230),
+			v:Name(),
+			Ranks(rank).color,
+			(' - (%s) - '):format(rank),
+			Color(230, 230, 230),
+			string.NiceTime(v.VenusData and tonumber(v:GetVenusData().totalPlayed) or v:TimeConnected())
+		}
+		table.Add(users, tbl)
+	end
+	Venus.CmdFeedback(caller, tostring(self), users)	
 end)
 
 Commands:Create('kick', 'Administrative', 'Kicks the player off the server', false, function(self, caller, silent, args)
