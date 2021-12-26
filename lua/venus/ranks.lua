@@ -25,6 +25,15 @@ Ranks = {
         if self.parent and self.List[self.parent] then return (self.List[self.parent]):HasAccess(flag) end
         return false
     end,
+		CheckPriority = function(self, tRank)
+			local iterRank = self
+			if self.rank == iterRank.rank then return false end
+			while iterRank.parent and Venus:GetRank(iterRank.parent) do
+				iterRank = Venus:GetRank(iterRank.parent)
+				if iterRank.rank == tRank then return false end
+			end
+			return true
+		end,
     PrepareForDatabase = function(self)
         return {
             rank = self.rank,

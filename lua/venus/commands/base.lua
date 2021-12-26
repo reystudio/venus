@@ -23,7 +23,7 @@ local function msgOnCall(self, caller, silent, args)
 		argsContent = argsContent .. tostring(v)
 	end
 	argsContent = ('[%s]'):format(argsContent)
-	MsgC(rankColor, caller:Name(), white, ' runs ', orange, self.name, grey, argsContent, '\n')
+	MsgC(rankColor, isstring(caller) and caller or caller:Name(), white, ' runs ', orange, self.name, grey, argsContent, '\n')
 end
 
 local StringPattern = '["|\']'
@@ -86,6 +86,22 @@ Commands = {
 				table.insert(ret, chr)
 			end
 			return ret
+	end,
+	canSpell = function(self, isSilent, caller, target)
+		if caller == 'server' then return true end
+		local userRank = Venus.GetRank(caller.VenusData.rank)
+		if not userRank then return false end
+		if userRank:HasAccess(self.name) and (not isSilent or userRank:HasAccess('silent')) then
+			if self.safe then return true end
+			local be = userRank:CheckPriority(target.VenusData.rank)
+			return be 
+		else
+			return false
+		end
+	end,
+	noPermsMessage = 'Sorry, but you have no rights to call this command.',
+	notifyNoPermissions = function(self, caller)
+		Venus.CmdFeedback(caller, tostring(self), { self.noPermsMessage })	
 	end
 }
 
