@@ -5,4 +5,5 @@ end
 if SERVER then
 	AddCSLuaFile 'venus/client/client.lua'
 end
+
 include 'venus/client/client.lua'
