@@ -102,10 +102,10 @@ end
 local resultPresets = {
     [true] = { grey, leftQBracket, green, check, grey, rightQBracket .. ' ', white },
     [false] = { grey, leftQBracket, red, cross, grey, rightQBracket .. ' ', white },
-    [1] = { grey, leftQBracket, cyan, 'Note', grey, rightQBracket .. ' ', white }
+    [1] = { grey, leftQBracket, cyan, 'Process', grey, rightQBracket .. ' ', white }
 }
 
-function PrintStatus(level, result, process, msg)
+function PrintStatus(level, result, process, ...)
     if cvar:GetInt() < level then return end
     local preset = resultPresets[result] or resultPresets[1]
     preset = table.Copy(preset)
@@ -113,7 +113,7 @@ function PrintStatus(level, result, process, msg)
         table.insert(preset, 5, space .. tostring(process))
         table.insert(preset, 5, orange)
     end
-    preset[#preset + 1] = msg
+    table.Add(preset, {...})
     preset[#preset + 1] = '\n'
     MsgC(unpack(preset))
 end
