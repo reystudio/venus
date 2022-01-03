@@ -5,11 +5,13 @@
 local PlayerClass = FindMetaTable 'Player'
 
 -- getting steamid3
+function SteamID32to3(steamid)
+    local y, z = string.match(steamid, 'STEAM_%d:(%d):(%d+)')
+    return tonumber(y) + tonumber(z) * 2
+end
+
 function PlayerClass:SteamID3()
-    if not self.steamid3 then
-        local y, z = string.match(self:SteamID(), 'STEAM_%d:(%d):(%d+)')
-        self.steamid3 = tonumber(y) + tonumber(z) * 2
-    end
+    if not self.steamid3 then self.steamid3 = SteamID32to3(self:SteamID()) end
     return self.steamid3
 end
 
@@ -33,107 +35,52 @@ function FindActiveBySteamID3(steamid)
     return target
 end
 
-function PlayerClass:GetVenusData()
-    self.VenusData.lastVisit = os.time()
-    self.VenusData.totalPlayed = self.VenusData.totalPlayed + (self.lastTotalUpdate and (CurTime() - self.lastTotalUpdate) or 0)
-    self.lastTotalUpdate = CurTime()
-    return self.VenusData
-end
-
--- more simple using hooks
-local hadd = hook.Add
-local hrm = hook.Remove
-
 module('Venus', package.seeall)
 
-function SyncPlayer(ply, rank, firstVisit, lastVisit, rawPerms, totalPlayed)
-    ply:SetNWString('usergroup', rank)
+gameevent.Listen 'player_connect'
+gameevent.Listen 'player_disconnect'
+gameevent.Listen 'player_connect_client'
 
-    -- converting the {'e2', 'e2p', 'noclip'} form into {[permission] = true} form
-    local perms = {}
-    for _, p in next, util.JSONToTable(rawPerms) do perms[p] = true end
+--[[    
+    number bot - 0 if the player isn't a bot, 1 if they are.
+    string networkid - The SteamID the player has. Will be "BOT" for bots and "STEAM_0:0:0" in single-player.
+    string name - The name the player has.
+    number userid - The UserID the player has.
+    number index - The entity index of the player, minus one.
+    string address - IP of the connected player. Will be "none" for bots and "loopback" for listen server and single-player hosts.
+]]
 
-    ply.VenusData = {
-        rank = rank,
-        firstVisit = firstVisit,
-        lastVisit = lastVisit,
-        totalPlayed = totalPlayed,
-        perms = perms
-    }
+CachedPlayers = {}
+
+function CachePlayer(steamid, callback)
+    DatabaseMisc.Query('caching:' .. steamid, DatabaseMisc.extendedQueries.get, true, function(result)
+        local sr = result[1]
+        callback((sr.status == true) and sr.data or false)
+    end, steamid)
 end
 
-local function LoadPlayer(ply)
-    ply.VenusLoaded = false
-    ply.lastTotalUpdate = CurTime()
-    PrintStatus(0, nil, 'Pulling player data from the database...')
-    GetPlayerData(ply:SteamID3(), function(data)
-        if not data then
-            PrintStatus(0, false, ply, 'Can\'t set up a rank to the player.')
-            DebugPrint(0, ply, ply:SteamID3())
-            return
+function UpdateLastVisit(steamid, callback)
+    DatabaseMisc.Query('lastvisit:' .. steamid, DatabaseMisc.extendedQueries.lastvisit, false, function() end)
+end
+
+Hook('player_connect', 'precaching_on_connect', function(data)
+    local id3 = SteamID32to3(data.networkid)
+    CachePlayer(id3, function(data)
+        if next(data) then
+            CachedPlayers[id3] = data
+            UpdateLastVisit(id3, function(data)
+                PrintStatus(0, true, 'lastvisit:' .. id3, 'ok')
+            end)
+        else
+            CachedPlayers[id3] = false
         end
-        if data == -1 then
-            PrintStatus(8, 0, ply, 'Can\'t find the player in the database, so creating a new row.')
-            DebugPrint(8, ply, ply:SteamID3())
-            SyncPlayer(ply, 'user', os.time(), os.time(), util.TableToJSON({}), 0)
-            PushNewPlayerData(ply:SteamID3())
-            ply.VenusLoaded = true
-            return
-        end
-        PrintStatus(8, true, ply, 'Synced with the database.')
-        DebugPrint(8, data)
-        PushPlayerData(ply:SteamID3(), { lastVisit = os.time() }, true)
-        SyncPlayer(ply, data.rank, data.firstVisit, data.lastVisit, data.perms, data.totalPlayed)
-        ply.VenusLoaded = true
     end)
-end
+end)
 
--- async loading player data from the database
-hadd('PlayerInitialSpawn', 'Venus_LoadPlayer', LoadPlayer)
+Hook('player_disconnect', 'uncache_on_disconnect', function(data)
+    print('player_disconnect', SysTime())
+end)
 
-local function UnloadPlayer(ply)
-    PrintStatus(0, nil, 'Pushing player data into the database...')
-
-    local dataOnLeave = nil
-    if ply.VenusLoaded then
-        dataOnLeave = table.Copy(ply:GetVenusData())
-        dataOnLeave.perms = PermissionsIntoSQL(dataOnLeave.perms)
-        dataOnLeave.totalPlayed = math.floor(dataOnLeave.totalPlayed)
-    else -- if for some reason loading player data failed, just update his lastVisit timestamp
-        dataOnLeave = { lastVisit = os.time() }
-    end
-
-    Venus.PushPlayerData(ply:SteamID3(), dataOnLeave, true)
-end
-
-hadd('PlayerDisconnected', 'Venus_UnloadPlayer', UnloadPlayer)
-
-local function UnloadAllPlayers()
-    PrintStatus(0, nil, 'SHUTDOWN', 'SAVING ALL PLAYERS\' DATA.')
-    for k, v in next, player.GetHumans() do
-        UnloadPlayer(v)
-    end
-end
-
--- save all players on shutdown
-hadd('Shutdown', 'Venus_SaveOnShutdown', UnloadAllPlayers)
-
-local lastAutoSave = CurTime()
-local saveTimer = 15 * 60 -- every 15 minutes
-
-local function AutoSavePData()
-    if lastAutoSave + saveTimer > CurTime() then return end
-    lastAutoSave = CurTime()
-    PrintStatus(0, nil, 'Autosaving', 'Saving players\' data.')
-    for k, v in next, player.GetHumans() do
-        local data = v:GetVenusData()
-        PushPlayerData(v:SteamID3(), {
-            lastVisit = data.lastVisit,
-            totalPlayed = math.floor(data.totalPlayed)
-        }, true)
-    end
-end
-
--- autosave every 15 minutes
--- probably later i could bind autoupdating to some event
-hadd('Tick', 'Venus_AutoSave', AutoSavePData)
+Hook('PlayerDisconnected', 'uncache', function()
+    print('PlayerDisconnected', SysTime())
+end)
