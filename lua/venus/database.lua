@@ -232,7 +232,7 @@ DatabaseMisc = {
                     if not customErrorHandling then goto dbSkipCustomErrHandling end
                 end
 
-                callback(r)
+                if callback then callback(r) end
 
                 ::dbSkipCustomErrHandling::
 
