@@ -4,6 +4,8 @@
 
 module('Venus', package.seeall)
 
+local function meta_tostring(self) return ('[rank:%s]'):format(self.rank) end
+
 local RankClass = {
     List = {},
     CreateRank = function(self, rank, color, perms, parent)
@@ -19,7 +21,7 @@ local RankClass = {
         }
         setmetatable(rankObj, {
             __index = self,
-            __tostring = function(self) return ('[rank:%s]'):format(self.rank) end
+            __tostring = meta_tostring
         })
         self.List[rank] = rankObj
     end,
