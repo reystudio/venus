@@ -8,6 +8,7 @@ module('Venus', package.seeall)
 local hid = 'Venus_' -- prevent duplicating strings
 function RunEvent(name, ...) return hook.Run(hid .. name, ...) end
 function EventCallback(name, key, callback) hook.Add(hid .. name, key, callback) end
+function Hook(...) hook.Add(...) end
 function RemoveEventCallback(name, key) hook.Remove(hid .. name, key) end
 function GetEventCallback(name, key)
     local t = hook.GetTable()[hid .. name]
