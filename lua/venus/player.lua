@@ -41,16 +41,32 @@ gameevent.Listen 'player_connect'
 gameevent.Listen 'player_disconnect'
 gameevent.Listen 'player_connect_client'
 
---[[    
-    number bot - 0 if the player isn't a bot, 1 if they are.
-    string networkid - The SteamID the player has. Will be "BOT" for bots and "STEAM_0:0:0" in single-player.
-    string name - The name the player has.
-    number userid - The UserID the player has.
-    number index - The entity index of the player, minus one.
-    string address - IP of the connected player. Will be "none" for bots and "loopback" for listen server and single-player hosts.
-]]
+CachedPlayers = CachedPlayers or {}
+ConnectingPlayers = ConnectingPlayers or {}
+PlayerSpawnedInWorld = PlayerSpawnedInWorld or {}
 
-CachedPlayers = {}
+local function ConvertPerms(ToJSON, perms)
+    -- dir :: bool
+    -- true -> from table to json
+    -- false -> from json to table
+    local p = {}
+    if ToJSON then
+        for k, v in next, perms do
+            p[#p + 1] = k
+        end
+        return util.TableToJSON(p)
+    else
+        for k, v in next, util.JSONToTable(perms) do
+            p[v] = true
+        end
+        return p
+    end
+end
+
+local function GetTotalTime(id)
+    -- id is a key or an entity
+    return (CurTime() - PlayerSpawnedInWorld[id]) + (CachedPlayers[id].totalplayed or 0)
+end
 
 function CachePlayer(steamid, callback)
     DatabaseMisc.Query('caching:' .. steamid, DatabaseMisc.extendedQueries.get, true, function(result)
@@ -60,27 +76,87 @@ function CachePlayer(steamid, callback)
 end
 
 function UpdateLastVisit(steamid, callback)
-    DatabaseMisc.Query('lastvisit:' .. steamid, DatabaseMisc.extendedQueries.lastvisit, false, function() end)
+    DatabaseMisc.Query('lastvisit:' .. steamid, DatabaseMisc.extendedQueries.lastvisit, false, nil, steamid)
 end
 
-Hook('player_connect', 'precaching_on_connect', function(data)
+function UpdatePlayer(steamid, kvpairs)
+    DatabaseMisc.Query('updateplayer:' .. steamid, DatabaseMisc.presets.doUpdate('venus_players', kvpairs, {{'steamid', steamid}}), false)
+end
+
+local function PushNewPlayer(steamid)
+    DatabaseMisc.Query('firstvisit:' .. steamid, DatabaseMisc.presets.doInsert('venus_players', {
+        {'steamid', steamid},
+        {'usergroup', safeString('user')},
+        {'lastvisit', 'now()'},
+        {'perms', safeString(util.TableToJSON({}))},
+        {'firstvisit', 'now()'},
+        {'totalplayed', 0}
+    }), false, function(result) end)
+end
+
+local ignoreOnUpdate = {
+    ['lastvisit'] = true,
+    ['firstvisit'] = true
+}
+
+function UnloadPlayer(steamid, data, callback)
+    local updatePairs = {}
+    for k, v in next, data do
+        updatePairs[#updatePairs + 1] = { v[1], v[2] }
+    end
+    local where = {{'steamid', steamid}}
+    DatabaseMisc.Query('unloadply:' .. steamid, DatabaseMisc.presets.doUpdate('venus_players', updatePairs, where), false, function(result)
+        local r = result[1]
+        PrintStatus(5, r.status, 'unloadply:' .. steamid)
+    end)
+end
+
+Hook('player_connect', 'v__precaching_on_connect', function(data)
     local id3 = SteamID32to3(data.networkid)
+    ConnectingPlayers[id3] = true
     CachePlayer(id3, function(data)
-        if next(data) then
-            CachedPlayers[id3] = data
+        if data and data[1] and next(data) then
+            if not ConnectingPlayers[id3] then return end
+            CachedPlayers[id3] = data[1]
+            CachedPlayers[id3].perms = ConvertPerms(false, CachedPlayers[id3].perms)
             UpdateLastVisit(id3, function(data)
                 PrintStatus(0, true, 'lastvisit:' .. id3, 'ok')
             end)
         else
-            CachedPlayers[id3] = false
+            PushNewPlayer(id3)
+            CachedPlayers[id3] = {
+                steamid = id3,
+                usergroup = 'user',
+                lastvisit = os.time(),
+                perms = {},
+                firstvisit = os.time(),
+                totalplayed = 0
+            }
         end
     end)
 end)
 
-Hook('player_disconnect', 'uncache_on_disconnect', function(data)
-    print('player_disconnect', SysTime())
+Hook('player_disconnect', 'v__uncache_on_disconnect', function(data)
+    local id3 = SteamID32to3(data.networkid)
+    if ConnectingPlayers[id3] then return end
+    local obj = CachedPlayers[id3]
+    UnloadPlayer(id3, {
+        {'totalplayed', math.floor(GetTotalTime(id3))},
+        {'lastvisit', 'now()'}
+    })
+    CachedPlayers[id3] = nil
+    PlayerSpawnedInWorld[id3] = nil
 end)
 
-Hook('PlayerDisconnected', 'uncache', function()
-    print('PlayerDisconnected', SysTime())
+Hook('PlayerInitialSpawn', 'v__set_player_data', function(ply)
+    local id3 = ply:SteamID3()
+    ConnectingPlayers[id3] = nil
+    CachedPlayers[ply] = CachedPlayers[id3]
+    PlayerSpawnedInWorld[id3] = CurTime()
+    PlayerSpawnedInWorld[ply] = PlayerSpawnedInWorld[id3]
+end)
+
+Hook('PlayerDisconnected', 'v__unload_player', function(ply)
+    CachedPlayers[ply] = nil
+    PlayerSpawnedInWorld[ply] = nil
 end)
