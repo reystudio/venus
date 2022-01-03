@@ -104,6 +104,42 @@ hook.Add('DatabaseLoaded', 'venus_DB_Init', function(db, t)
     hook.Add('Think', 'MySQLite:tmysqlPoll', function() DATABASE:Poll() end)
 end)
 
+--[[
+
+    DOCUMENTATION O_o
+
+    ========================================================================
+
+    Venus.DatabaseMisc.doInsert(string tableName, table kvpairs)
+
+        tableName: mysql table name
+        kvpairs: key-value pairs {{'steamid', 123123}, {'rank', "'user'"}}
+
+    ========================================================================
+
+    Venus.DatabaseMisc.doUpdate(string tableName, table kvpairs, table wherepairs)
+
+        tableName: mysql table name
+        kvpairs: key-value pairs {{'lastvisit', 'now()'}, {'rank', "'user'"}}
+        wherepairs: key-value pairs {{'steamid', 123123}}
+
+    ========================================================================
+
+    Venus.DatabaseMisc.doSelect(string tableName, table requiredValues, table wherepairs)
+
+        tableName: mysql table name
+        requiredValues: values tuple {'rank', 'lastvisit'}
+        wherepairs: key-value pairs {{'steamid', 123123}, {'key', 'equals value'}}
+
+    ========================================================================
+
+    Venus.DatabaseMisc.doDelete(string tableName, table wherepairs)
+
+        tableName: mysql table name
+        wherepairs: key-value pairs {{'steamid', 123123}, {'key', 'equals value'}}
+
+]]
+
 DatabaseMisc = {
     queue = {},
     presets = {
