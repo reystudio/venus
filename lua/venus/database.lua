@@ -110,7 +110,54 @@ DatabaseMisc = {
         insert = 'INSERT INTO %s (%s) VALUES (%s);',
         update = 'UPDATE %s SET %s WHERE %s;',
         select = 'SELECT %s FROM %s WHERE %s;',
-        delete = 'DELETE %s FROM %s WHERE %s;'
+        delete = 'DELETE FROM %s WHERE %s;',
+        doInsert = function(tableName, kvpairs)
+            local keys = {}
+            local values = {}
+            for k, v in next, kvpairs do
+                keys[#keys + 1] = v[1]
+                values[#values + 1] = v[2]
+            end
+            return DatabaseMisc.presets.insert:format(tableName, table.concat(keys, ', '), table.concat(values, ', '))
+        end,
+        doUpdate = function(tableName, kvpairs, wherepairs)
+            local kv = {}
+            local where = {}
+            local kvString = string.rep('%s = %s', #kvpairs, ', ')
+            local whereString = string.rep('%s = %s', #wherepairs, ', ')
+            for k, v in next, kvpairs do
+                local putloc = #kv
+                kv[putloc + 1] = v[1]
+                kv[putloc + 2] = v[2]
+            end
+            for k, v in next, wherepairs do
+                local putloc = #where
+                where[putloc + 1] = v[1]
+                where[putloc + 2] = v[2]
+            end
+            return DatabaseMisc.presets.update:format(tableName, kvString:format(unpack(kv)), whereString:format(unpack(where)))
+        end,
+        doSelect = function(tableName, reqValues, wherepairs)
+            local req = (reqValues == '*') and reqValues or table.concat(reqValues, ', ')
+            local whereString = string.rep('%s = %s', #wherepairs, ', ')
+            local where = {}
+            for k, v in next, wherepairs do
+                local putloc = #where
+                where[putloc + 1] = v[1]
+                where[putloc + 2] = v[2]
+            end
+            return DatabaseMisc.presets.select:format(req, tableName, whereString:format(unpack(where)))
+        end,
+        doDelete = function(tableName, where)
+            local whereString = string.rep('%s = %s', #wherepairs, ', ')
+            local where = {}
+            for k, v in next, wherepairs do
+                local putloc = #where
+                where[putloc + 1] = v[1]
+                where[putloc + 2] = v[2]
+            end
+            return DatabaseMisc.presets.delete:format(tableName, whereString:format(unpack(where)))
+        end
     },
     isProcessing = false,
     Pipeline = function(q)
