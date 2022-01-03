@@ -22,8 +22,8 @@ local patterns = {
     -- ??
 }
 
-local function safeString(str)
-    return ("'%s'"):format(str)
+function safeString(str)
+    return string.Replace(("'%s'"):format(str), '\\', '\\\\')
 end
 
 local build_new_table_query = function( tableName, ... )
