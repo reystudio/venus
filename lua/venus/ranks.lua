@@ -4,81 +4,39 @@
 
 module('Venus', package.seeall)
 
---[[
-    local user = Ranks('user', 'Member', Color(255, 255, 255), {'who', 'help', 'votekick'})
-    local moder = Ranks('mod', 'Moderator', Color(100, 255, 100), {'goto', 'bring', 'kick', 'ban'}, 'user')
-    local admin = Ranks('admin', 'Administrator', Color(255, 100, 100), {'vote', 'restart', 'alert', 'note'}, 'mod')
-    local root = Ranks('root', 'Master', Color(100, 100, 255), {'*'})
+local RankClass = {
+    List = {},
+    CreateRank = function(self, rank, color, perms, parent)
+        local p = {}
+        for k, v in next, perms do
+            p[v] = true
+        end
+        local rankObj = {
+            rank = rank,
+            color = color,
+            perms = p,
+            parent = parent
+        }
+        setmetatable(rankObj, {
+            __index = self,
+            __tostring = function(self) return ('[rank:%s]'):format(self.rank) end
+        })
+        self.List[rank] = rankObj
+    end,
+    IsPermitted = function(self, cmd)
+        -- recursive checking rank, his parents and parents of parents for permission to spell some command
+        return (self.perms['*'] or self.perms[cmd] or (self.parent and (self.List[self.parent]):IsPermitted(cmd))) == true
+    end,
+}
 
-    print( moder:HasAccess( 'who' ) ) -- true
+function GetRank(rank) return RankClass.List[rank] end
+
+--[[
+    Basic ranks with basic permissions
 ]]
 
-local l = Ranks and Ranks.List or {}
-
-Ranks = {
-    List = l,
-    HasAccess = function(self, flag)
-        local perms = self.permissions
-        if perms['*'] then return true end
-        if perms[flag] then return true end
-        if self.parent and self.List[self.parent] then return (self.List[self.parent]):HasAccess(flag) end
-        return false
-    end,
-	CheckPriority = function(self, tRank)
-		local iterRank = self
-		if self.rank == iterRank.rank then return false end
-		while iterRank.parent and Venus:GetRank(iterRank.parent) do
-			iterRank = Venus:GetRank(iterRank.parent)
-			if iterRank.rank == tRank then return false end
-		end
-		return true
-	end
-}
-setmetatable(Ranks, {
-    __call = function(self, rank, name, color, permissions, parentName)
-        if self.List[rank] then return self.List[rank] end
-        local new = {
-            rank = rank,
-            name = name,
-            color = color,
-            permissions = permissions,
-            parent = parentName
-        }
-        setmetatable(new, { __index = Ranks, __tostring = function(self) return ('VenusRank[%s]'):format(self.name) end })
-        self.List[rank] = new
-        return new
-    end,
-})
-
-function GetRank(rank) return Ranks[rank] end
-
-Ranks = {
-    {
-        rank = 'user',
-        name = 'Member',
-        color = Color(200, 200, 200),
-        perms = {'who','help','admin','pm','votekick'},
-        parent = nil
-    },
-    {
-        rank = 'mod',
-        name = 'Moderator',
-        color = Color(50, 200, 50),
-        perms = {'goto','bring','jump','kick','ban','alert','note'},
-        parent = 'user'
-    },
-    {
-        rank = 'admin',
-        name = 'Administrator',
-        color = Color(200, 50, 50),
-        perms = {'hp','armor','vote','silent'},
-        parent = 'mod'
-    },
-    {
-        rank = 'root',
-        name = 'Master',
-        color = Color(255, 160, 70),
-        perms = {'*'},
-        parent = nil
-    }
-}
+RankClass:CreateRank('user',        Color(200, 200, 200),   {'who','help','admin','pm'})
+RankClass:CreateRank('trusted',     Color(170, 170, 200),   {'e2', 'votekick'},                                     'user')
+RankClass:CreateRank('moderator',   Color(50, 200, 50),     {'goto','bring','jump','kick','ban','alert','note'},    'trusted')
+RankClass:CreateRank('admin',       Color(50, 50, 200),     {'hp','armor','vote','silent'},                         'moderator')
+RankClass:CreateRank('root',        Color(200, 50, 50),     {'*'},                                                  'admin')
