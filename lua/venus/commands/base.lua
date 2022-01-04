@@ -1,57 +1,11 @@
 module('Venus', package.seeall)
 
-local conTag = {
-	orange, '[V]', grey, arrow
-}
-
-local function msgOnCall(self, caller, silent, args)
-	-- Venus.PrintStatus(0, true, self.name, ('"%s" has runned the non-existing command.'):format(caller:Name()) )
-	-- Venus.Print(8, caller, args, silent)
-	MsgC(unpack(conTag))
-	if silent then
-		MsgC(grey, '[silent] ')
-	end
-	local rankColor
-	if not caller.VenusLoaded or not Ranks.List[caller.VenusData.rank] then
-		rankColor = Ranks.List.user.color
-	else
-		rankColor = Ranks.List[caller.VenusData.rank].color
-	end
-	local argsContent = ''
-	for k, v in ipairs(args) do
-		if k ~= 1 then argsContent = argsContent .. ', ' end
-		argsContent = argsContent .. tostring(v)
-	end
-	argsContent = ('[%s]'):format(argsContent)
-	MsgC(rankColor, isstring(caller) and caller or caller:Name(), white, ' runs ', orange, self.name, grey, argsContent, '\n')
-end
-
 local StringPattern = '["|\']'
 local EscapePattern = '[\\]'
 local ArgSepPattern = '[%s]'
 
 Commands = {
 	List = {},
-	Create = function(self, name, category, desc, safe, run, content)
-		local Command = {
-			name = name,
-			category = category,
-			desc = desc or 'No description',
-			safe = safe,
-			run = run,
-			content = content
-		}
-		setmetatable(Command, {
-			__call = function(...)
-				msgOnCall(...)
-				run(...)
-			end,
-			__index = self,
-			__tostring = function(self) return ('cmd:%s'):format(self.name) end
-		})
-		self.List[name] = Command
-		return Command
-	end,
 	ParseArgs = function(str)
 			local ret = {}
 			local InString = false
@@ -89,66 +43,63 @@ Commands = {
 			end
 			return ret
 	end,
-	canSpell = function(self, isSilent, caller, target)
-		if caller == 'server' then return true end
-		local userRank = Venus.GetRank(caller.VenusData.rank)
-		if not userRank then return false end
-		if userRank:HasAccess(self.name) and (not isSilent or userRank:HasAccess('silent')) then
-			if self.safe then return true end
-			local be = userRank:CheckPriority(target.VenusData.rank)
-			return be 
-		else
-			return false
-		end
+	CreateCommand = function(self, name, description, run)
+		local cmd = {
+			name = name,
+			description = description,
+			run = run
+		}
+		setmetatable(cmd, {
+			__tostring = function(self) return ('[cmd:%s]'):format(self.name) end,
+			__call = function(self, caller, isSilent, args)
+				if caller and IsValid(caller) then
+					local plyVenus = CachedPlayers[caller]
+					local callerRank = GetRank(plyVenus.usergroup)
+					if plyVenus.perms['*'] or (callerRank:IsPermitted(self.name) and (isSilent and callerRank:IsPermitted('silent') or true)) then
+						return self:run(caller, isSilent, args)
+					else
+						Print(0, caller, tostring(self), 'not allowed')
+					end
+				else
+					return self:run(NULL, isSilent, args)
+				end
+			end
+		})
+		self.List[name] = cmd
 	end,
-	noPermsMessage = 'Sorry, but you have no rights to call this command.',
-	notifyNoPermissions = function(self, caller)
-		Venus.CmdFeedback(caller, tostring(self), { self.noPermsMessage })	
-	end
 }
 
-setmetatable(Commands, {
-    __call = function(self, cmd)
-        return self.List[cmd] or self.List.notfound
-    end
-})
+function GetCmd(cmd) return Commands.List[cmd] end
 
-Commands:Create('notfound', 'General', 'does nothing', true, function(self, caller, silent, args)
-	Venus.CmdFeedback(caller, "Can't find the command you are trying to call.")
+-- Commands List
+
+Commands:CreateCommand('goto', '<PartOfPlayerName/"Player Name"/pos(X:Y:Z)/ent(index)>', function(self, caller, isSilent, args)
+
+	if not caller or not IsValid(caller) then Print(0, 'Server cant run ' .. tostring(self)) return end
+
+	local target = nil
+
+	for k, v in next, player.GetAll() do
+		-- more accuracy searching the target by his name
+		if string.find(v:Name(), args[1]) then target = v break end
+	end
+
+	if target and IsValid(target) then
+		caller:SetPos(target:GetPos())
+	else
+		Print(0, 'Cant find the target.')
+	end
+
 end)
 
-Commands:Create('who', 'General', 'Shows players on the server and their ranks.', true, function(self, caller, silent, args)
-	local users = {}
-	local plyLine = '#%i.\t%s\t%s\t%s'
-	for k, v in ipairs(player.GetAll()) do
-		local rank = v.VenusData and v.VenusData.rank or 'user'
-		local tbl = {
-			'\n',
-			Color(255, 170, 50),
-			k .. '. ',
-			Color(230, 230, 230),
-			v:Name(),
-			Ranks(rank).color,
-			(' - (%s) - '):format(rank),
-			Color(230, 230, 230),
-			string.NiceTime(v.VenusData and tonumber(v:GetVenusData().totalPlayed) or v:TimeConnected())
-		}
-		table.Add(users, tbl)
+concommand.Add( 'venus', function(ply, cmd, args, argStr)
+	local v_cmd = table.remove(args, 1)
+	local cmdObj = GetCmd(v_cmd)
+	if cmdObj then
+		local isSilent = args[1] == 'silent'
+		PrintStatus(0, true, 'cmd:' .. v_cmd, 'OK!')
+		cmdObj(ply, table.remove(args, 1), args)
+	else
+		PrintStatus(0, false, 'cmd:' .. v_cmd, 'Called command not exists.')
 	end
-	Venus.CmdFeedback(caller, tostring(self), users)	
-end)
-
-Commands:Create('kick', 'Administrative', 'Kicks the player off the server', false, function(self, caller, silent, args)
-	local target = args[1]
-	if not self:canSpell(silent, caller, target) then
-		self:notifyNoPermissions(caller)
-		return
-	end
-	local reason = self.content.kickMessage:format( args[2] )
-	-- TODO: push the action log into admin log system and in-game monitoring
-	target:Kick(reason)
-end, {
-	kickMessage = 'You were kicked from the server.\nReason: %s'
-})
-
-Print(5, 'Loading commands module complete.')
+end )

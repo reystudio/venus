@@ -10,4 +10,6 @@ include 'database.lua'
 include 'player.lua'
 include 'ranks.lua'
 
+include 'commands/base.lua'
+
 RunEvent('Loaded')
