@@ -6,12 +6,13 @@ local PlayerClass = FindMetaTable 'Player'
 
 -- getting steamid3
 function SteamID32to3(steamid)
+    if steamid == 'BOT' then return 0 end
     local y, z = string.match(steamid, 'STEAM_%d:(%d):(%d+)')
     return tonumber(y) + tonumber(z) * 2
 end
 
 function PlayerClass:SteamID3()
-    if not self.steamid3 then self.steamid3 = SteamID32to3(self:SteamID()) end
+    if not self.steamid3 then self.steamid3 = self:IsPlayer() and SteamID32to3(self:SteamID()) or 0 end
     return self.steamid3
 end
 
@@ -138,7 +139,7 @@ end)
 
 Hook('player_disconnect', 'v__uncache_on_disconnect', function(data)
     local id3 = SteamID32to3(data.networkid)
-    if ConnectingPlayers[id3] then return end
+    if data.bot == 1 or ConnectingPlayers[id3] then return end
     local obj = CachedPlayers[id3]
     UnloadPlayer(id3, {
         {'totalplayed', math.floor(GetTotalTime(id3))},
