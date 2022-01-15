@@ -74,23 +74,31 @@ function GetCmd(cmd) return Commands.List[cmd] end
 -- Commands List
 
 Commands:CreateCommand('goto', '<PartOfPlayerName/"Player Name"/pos(X:Y:Z)/ent(index)>', function(self, caller, isSilent, args)
-
 	if not caller or not IsValid(caller) then Print(0, 'Server cant run ' .. tostring(self)) return end
-
 	local target = nil
-
 	for k, v in next, player.GetAll() do
 		-- more accuracy searching the target by his name
 		if string.find(v:Name(), args[1]) then target = v break end
 	end
-
 	if target and IsValid(target) then
 		caller:SetPos(target:GetPos())
 	else
 		Print(0, 'Cant find the target.')
 	end
-
 end)
+
+--[[ TODO:
+
+	Parsing arguments:
+
+	vec(x, y, z) -> Vector(x, y, z)
+	ent(index) -> Entity(index)
+	me() -> caller
+	this() -> caller's EyeTrace.Entity
+	time(XhYmZs) -> X hours, Y minutes, Z seconds -> (X*60*60 + Y*60 + Z)
+	!bring Bot01 "Rey Rey" -> Bot01, Rey Rey (the argument that consists of more than 1 word, but separated with quotes)
+
+]]
 
 concommand.Add( 'venus', function(ply, cmd, args, argStr)
 	local v_cmd = table.remove(args, 1)
